@@ -1,9 +1,9 @@
-import { SafeAreaView, ScrollView, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
+import { SafeAreaView, ScrollView, StyleSheet,View, Image} from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Stack, Link, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { Button } from 'react-native-paper'
 import { images } from '../constants'
-import { SignInButton, SignUpButton } from '../components/AuthButtons'
 import { isTokenExpired } from '../api/index'
 
 
@@ -29,16 +29,11 @@ export default function App() {
         <View style={styles.container}>
           <Image source={ images.logo } style={{ width: 130, height: 130, borderRadius: 70 }} resizeMode='contain' />
           {/* create a onPress handler */}
-          <SignInButton handlePress={handlePress} route={'/signIn'}/>
-          <SignUpButton handlePress={handlePress} route={'/signUp'}/>
-          <Link href='/home' style={{
-            color: '#3B82F6', 
-            borderColor: '#3B82F6', 
-            borderWidth: 0.5,
-            paddingVertical: 8,
-            marginTop: 3
-            }}>Continue as guest </Link>
+          <Button mode='contained' buttonColor='#3B82F6' textColor='#fff' onPress={() => handlePress('/signIn')} style={{ width: '100%', marginVertical: 5}}>Sign In</Button>
 
+          <Button mode='outlined' textColor='#3B82F6' onPress={() => handlePress('/signUp')} style={{ width: '100%', marginVertical: 5, borderColor: '#3B82F6'}}>Sign Up</Button>
+
+          <Button mode='outlined' textColor='#3B82F6' onPress={() => handlePress('/home')} style={{ width: '100%', marginVertical: 5, borderColor: '#3B82F6'}}>Continue as guest</Button>          
         </View>
 
       </ScrollView>

@@ -2,6 +2,10 @@ import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { jwtDecode } from "jwt-decode";
 
+
+const baseUrl = 'https://unisource.nahom.eu.org/api/v1/'
+
+
 async function getToken() {
     try {
       const value = await AsyncStorage.getItem("auth_keys");
@@ -28,7 +32,7 @@ async function getToken() {
 }
 async function refreshToken(refreshToken) {
     try {
-      const response = await axios.post('https://unisource.onrender.com/api/v1/token/refresh', {
+      const response = await axios.post(baseUrl + 'token/refresh', {
         refresh: refreshToken,
       });
       return response.data.access;
@@ -40,11 +44,13 @@ async function refreshToken(refreshToken) {
 
 async function getAxiosInstance() {
     const { token } = await getToken();
+    
     return axios.create({
-      baseURL: 'https://unisource.onrender.com/api/v1/',
-      timeout: 1000,
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
+      baseURL: baseUrl,
+      //timeout: 10000,
+      
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
 }
 
 

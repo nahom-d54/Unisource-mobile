@@ -1,59 +1,139 @@
-import getAxiosInstance from '../../api';
+import { useRouter } from 'expo-router';
+import getAxiosInstance from '../../api/index';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { ActivityIndicator, Dialog, PaperProvider, Portal } from 'react-native-paper';
 
 const Filter = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('Select an option');
+  const [selectedOption, setSelectedOption] = useState(null);
   const [options, setOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const [hasMoreItems, setHasMoreItems] = useState(false);
+  const [isAtEndOfScroll, setIsAtEndOfScroll] = useState(false);
+  const [page, setPage] = useState(null);
+  const router = useRouter()
 
-
-
-  const fetchOptions = async () => {
+  const getItems = async ( category = '', pageNumber = 1) => {
     try {
+      if( pageNumber === null) pageNumber = 1;
       setIsLoading(true);
-      const axios = getAxiosInstance();
-      const result = await axios.get(`/category/}`);
-      setOptions([...options, result.data])
+      const axios_instance = await getAxiosInstance();
+      const url = `/resource/?page=${pageNumber}&category=${category}`
+      const result = await axios_instance.get(url);
+      console.log(result.data);
+      setItems((prevItems) => [...result.data.results]);
+      setHasMoreItems(result.data.next !== null);
+      if(hasMoreItems) setPage((prevPage) => prevPage + 1);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching items:', error, category, pageNumber);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleScroll = (event) => {
+    const contentOffset = event.nativeEvent.contentOffset.y;
+    const contentSize = event.nativeEvent.contentSize.height;
+    const layoutMeasurement = event.nativeEvent.layoutMeasurement.height;
+
+    if (contentOffset + layoutMeasurement >= contentSize) {
+      setIsAtEndOfScroll(true);
+    } else {
+      setIsAtEndOfScroll(false);
+    }
+  };
+
+
+
+  
+
   useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setIsLoading(true);
+        const axios_instance = await getAxiosInstance();
+        const result = await axios_instance.get('/category/');
+        setOptions([...result.data])
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchOptions();
   }, []);
+
+  useEffect(() => {
+    if( selectedOption && selectedOption.id){
+      setPage(1)
+      console.log(page);
+      getItems(selectedOption.id, page)   
+    }
+  }, [selectedOption])
+
+  useEffect(() => {
+    if (isAtEndOfScroll && hasMoreItems && !isLoading) {
+      getItems(selectedOption.id, page)
+    }
+  }, [isAtEndOfScroll, hasMoreItems, isLoading, selectedOption, page]);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
   const handleOptionSelect = (option) => {
-    setSelectedOption(option);
+    setSelectedOption({name: option.name, id: option.id});
     setIsOpen(false);
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.dropdownButton} onPress={toggleDropdown}>
-        <Text style={styles.dropdownText}>{selectedOption}</Text>
+        <Text style={styles.dropdownText}>{selectedOption?.name ? selectedOption.name : 'Select Category'}</Text>
         <Text style={styles.dropdownText}>{isOpen ? '▲' : '▼'}</Text>
       </TouchableOpacity>
-      {isOpen && (
-        <View style={styles.dropdownMenu}>
-          {options.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.dropdownOption}
-              onPress={() => handleOptionSelect(option)}
-            >
-              <Text style={styles.dropdownOptionText}>{option}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      
+      <ScrollView onScroll={handleScroll}>
+        {isLoading && <ActivityIndicator animating={true} size={100} style={{ alignSelf: 'center', marginTop: '50%'}}/>}
+        { items.map((item, index) => (
+          <TouchableOpacity key={index} onPress={() => router.push(`/detail/${item.id}`)}>
+            <View style={styles.item}>
+              <Image source={ item.image ? {uri: item.image}: images.nocover } style={{ width: 80, height: 110, borderRadius: 10}}/>
+                <View style={{ padding: 2, width: '65%'}}>
+                  <Text style={{ fontSize: 17, fontWeight: '600'}}>{item.name}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '400'}}>{item.author}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '300' }} numberOfLines={2} ellipsizeMode="tail">ISBN: { item.isbn }</Text>
+                </View>
+            </View>
+          </TouchableOpacity>
+        )) }
+      </ScrollView>
+      <Portal>
+        <PaperProvider>
+        <Dialog visible={isOpen} onDismiss={toggleDropdown}>
+          <Dialog.Title>Select Category</Dialog.Title>
+          <Dialog.ScrollArea style={{ height: 300}}>
+            <ScrollView contentContainerStyle={{paddingHorizontal: 24}}>
+              {options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.dropdownOption}
+                onPress={() => handleOptionSelect(option)}
+              >
+                <Text style={styles.dropdownOptionText}>{option.name}</Text>
+              </TouchableOpacity>
+            ))}
+           
+            </ScrollView>
+          </Dialog.ScrollArea>
+
+        </Dialog>
+
+        </PaperProvider>
+      </Portal>
+      
     </View>
   );
 };
@@ -75,6 +155,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     width: '80%',
+    
   },
   dropdownText: {
     fontSize: 16,
@@ -97,6 +178,15 @@ const styles = StyleSheet.create({
   dropdownOptionText: {
     fontSize: 16,
     color: '#333',
+  },
+  item: {
+    marginRight: 16,
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    marginVertical: 8
+    // Add your item styles here
   },
 });
 
