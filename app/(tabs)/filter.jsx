@@ -57,15 +57,15 @@ const Filter = () => {
     }
   }, [selectedOption])
 
+  const handleOptionSelect = (option) => {
+    setSelectedOption({name: option.name, id: option.id});
+    setIsOpen(false);
+  };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleOptionSelect = (option) => {
-    setSelectedOption({name: option.name, id: option.id});
-    setIsOpen(false);
-  };
 
   return (
     <View style={styles.container}>

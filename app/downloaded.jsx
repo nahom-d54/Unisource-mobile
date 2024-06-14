@@ -27,26 +27,26 @@ const downloadedFiles = () => {
     })
 
   };
-  const hideAllDialog = () => {
-    setConfirmDelete(false);
-  };
   const handleAllDelete = () => {
     setConfirmDelete(false);
     deleteAll()
   };
-  
-
-  const hideDialog = () => {
-    setVisible(false);
-    setSelectedItem(null);
+  const hideAllDialog = () => {
+    setConfirmDelete(false);
   };
-
+  
   const handleDelete = () => {
     if (selectedItem) {
       deleteItem(selectedItem);
       hideDialog();
     }
   };
+
+  const hideDialog = () => {
+    setVisible(false);
+    setSelectedItem(null);
+  };
+
 
   async function deleteItem (item) {
     try {
