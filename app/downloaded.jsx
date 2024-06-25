@@ -1,10 +1,11 @@
 import { Alert, StyleSheet, Text, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Divider, List, PaperProvider, Portal, Dialog, Button, Appbar } from 'react-native-paper'
+import { Divider, List, PaperProvider, Portal, Dialog, Button, Appbar, IconButton } from 'react-native-paper'
 import { startActivityAsync } from 'expo-intent-launcher';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
+import { saveFile } from '../utils/download';
 
 const downloadedFiles = () => {
   const router = useRouter()
@@ -113,6 +114,17 @@ const downloadedFiles = () => {
       console.log('Unable to delete items');
     })
   }
+
+  const saveFileHandler = async (item) => {
+    try {
+      await saveFile(item.path, item.filename, item.mimetype)
+      Alert.alert('Success', 'Item saved sucessfully')
+    }catch(err) {
+      Alert.alert('Error', `Unknown Error occured ${err}`)
+    }
+
+  }
+
   return (
     <>
     <Appbar.Header  style={{ backgroundColor: '#fff'}} mode='small' elevated={true}>
@@ -122,12 +134,12 @@ const downloadedFiles = () => {
           
           <Appbar.Action icon="delete-outline" onPress={() => { showconfirmDeleteDialog()}} />
           
-      </Appbar.Header>
+    </Appbar.Header>
     <PaperProvider>
-      <List.Section>
+      <List.Section style={{ backgroundColor: '#fff'}}>
         { historyItems && historyItems.map((item, index) => (
             <View key={index}>
-              <List.Item onLongPress={ () => showDialog(item) } onPress={() => openFile(item.path, item.mimetype)} descriptionStyle={{ opacity: 0.5 }} style={{ paddingHorizontal: 16 }} description={getDate(item.timestamp)} title={item.filename} left={() => <List.Icon icon="file-check-outline" />} />
+              <List.Item titleStyle={{color: '#000'}} theme={{ colors: { primary: '#000'}}} onLongPress={ () => showDialog(item) } onPress={() => openFile(item.path, item.mimetype)} descriptionStyle={{ opacity: 0.5 }} style={{ paddingHorizontal: 16 }} description={getDate(item.timestamp)} title={item.filename} left={() => <List.Icon icon="file-check-outline" />}  right={() => <IconButton icon='export' size={20} onPress={() => saveFileHandler(item)}/>}/>
               <Divider/>
 
             </View>
@@ -137,7 +149,7 @@ const downloadedFiles = () => {
      </List.Section>
 
      <Portal>
-          <Dialog visible={visible} onDismiss={hideDialog}>
+          <Dialog style={{ backgroundColor: '#fff'}} visible={visible} onDismiss={hideDialog}>
             <Dialog.Title>Delete Item</Dialog.Title>
             <Dialog.Content>
               <Text>Are you sure you want to delete this item?</Text>
@@ -148,7 +160,7 @@ const downloadedFiles = () => {
             </Dialog.Actions>
           </Dialog>
 
-          <Dialog visible={confirmDelete} onDismiss={hideAllDialog}>
+          <Dialog style={{ backgroundColor: '#fff'}}  visible={confirmDelete} onDismiss={hideAllDialog}>
             <Dialog.Title>Delete All Items</Dialog.Title>
             <Dialog.Content>
                 <Text>Are you sure you want to delete all items ?</Text>

@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import getAxiosInstance from '../../api/index';
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import { ActivityIndicator, Dialog, PaperProvider, Portal } from 'react-native-paper';
+import { ActivityIndicator, Button, Dialog, PaperProvider, Portal } from 'react-native-paper';
+import { MyLoader } from '../../components/Loader';
 
 const Filter = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +12,9 @@ const Filter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(false);
-  const [isAtEndOfScroll, setIsAtEndOfScroll] = useState(false);
   const [page, setPage] = useState(null);
   const router = useRouter()
+
 
   const getItems = async ( category = '', pageNumber = 1) => {
     try {
@@ -22,32 +23,15 @@ const Filter = () => {
       const axios_instance = await getAxiosInstance();
       const url = `/resource/?page=${pageNumber}&category=${category}`
       const result = await axios_instance.get(url);
-      console.log(result.data);
-      setItems((prevItems) => [...result.data.results]);
+      setItems([...result.data.results]);
       setHasMoreItems(result.data.next !== null);
-      if(hasMoreItems) setPage((prevPage) => prevPage + 1);
+      if(hasMoreItems) setPage(page + 1);
     } catch (error) {
       console.error('Error fetching items:', error, category, pageNumber);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleScroll = (event) => {
-    const contentOffset = event.nativeEvent.contentOffset.y;
-    const contentSize = event.nativeEvent.contentSize.height;
-    const layoutMeasurement = event.nativeEvent.layoutMeasurement.height;
-
-    if (contentOffset + layoutMeasurement >= contentSize) {
-      setIsAtEndOfScroll(true);
-    } else {
-      setIsAtEndOfScroll(false);
-    }
-  };
-
-
-
-  
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -73,11 +57,6 @@ const Filter = () => {
     }
   }, [selectedOption])
 
-  useEffect(() => {
-    if (isAtEndOfScroll && hasMoreItems && !isLoading) {
-      getItems(selectedOption.id, page)
-    }
-  }, [isAtEndOfScroll, hasMoreItems, isLoading, selectedOption, page]);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -95,7 +74,7 @@ const Filter = () => {
         <Text style={styles.dropdownText}>{isOpen ? '▲' : '▼'}</Text>
       </TouchableOpacity>
       
-      <ScrollView onScroll={handleScroll}>
+      <ScrollView>
         {isLoading && <ActivityIndicator animating={true} size={100} style={{ alignSelf: 'center', marginTop: '50%'}}/>}
         { items.map((item, index) => (
           <TouchableOpacity key={index} onPress={() => router.push(`/detail/${item.id}`)}>
@@ -109,11 +88,12 @@ const Filter = () => {
             </View>
           </TouchableOpacity>
         )) }
+        {(hasMoreItems && !isLoading) && <Button theme={{colors: { primary: 'rgba(0,0,0,0.5)', outline: 'rgba(0,0,0,0.2)'}}} mode='outlined'  onPress={() => getItems(searchQuery,page)}>LoadMore ...</Button>}
       </ScrollView>
       <Portal>
         <PaperProvider>
-        <Dialog visible={isOpen} onDismiss={toggleDropdown}>
-          <Dialog.Title>Select Category</Dialog.Title>
+        <Dialog visible={isOpen} onDismiss={toggleDropdown} style={{backgroundColor: '#fff'}}>
+          <Dialog.Title theme={{colors: {primary: '#000'}}} style={{color: '#000'}}>Select Category</Dialog.Title>
           <Dialog.ScrollArea style={{ height: 300}}>
             <ScrollView contentContainerStyle={{paddingHorizontal: 24}}>
               {options.map((option, index) => (

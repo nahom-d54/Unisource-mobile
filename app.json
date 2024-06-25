@@ -4,11 +4,11 @@
     "slug": "Unisource",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/unisource.png",
     "userInterfaceStyle": "light",
     "scheme": "com.unisource.app",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/unisource_splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,8 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "package": "com.unisource.app"
+        "backgroundColor": "#ffffff"
       },
       "package": "com.unisource.app"
     },

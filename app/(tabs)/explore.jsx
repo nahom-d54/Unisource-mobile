@@ -5,32 +5,16 @@ import { images } from '../../constants'
 import _ from 'lodash'
 import getAxiosInstance from '../../api'
 import { useRouter } from 'expo-router'
-import { ActivityIndicator, List, PaperProvider, Provider } from 'react-native-paper'
-
-
-const ItemComponent = ({ item, onPress }) => (
-  <TouchableOpacity onPress={onPress}>
-    <View style={styles.item}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.textContainer}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.author}>{item.author}</Text>
-        <Text style={styles.isbn} numberOfLines={2} ellipsizeMode="tail">
-          ISBN: {item.isbn}
-        </Text>
-      </View>
-    </View>
-  </TouchableOpacity>
-);
+import { ActivityIndicator, Button, List, PaperProvider, Provider} from 'react-native-paper'
+import { MyLoader2 } from '../../components/Loader'
 
 
 const Explore = () => {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [hasMoreItems, setHasMoreItems] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAtEndOfScroll, setIsAtEndOfScroll] = useState(false);
   const router = useRouter()
 
   const getItems = async ( query = '', pageNumber = 1) => {
@@ -38,9 +22,11 @@ const Explore = () => {
       setIsLoading(true);
       const axios_instance = await getAxiosInstance();
       const result = await axios_instance.get(`/resource/?page=${pageNumber}&query=${query}`);
-      setItems((prevItems) => [...result.data.results]);
-      
+      setItems([...items,...result.data.results]);
       setHasMoreItems(result.data.next !== null);
+      if(hasMoreItems){
+        setPage(page + 1);
+      }
     } catch (error) {
       console.error('Error fetching items:', error);
     } finally {
@@ -48,47 +34,23 @@ const Explore = () => {
     }
   };
 
-  const handleScroll = (event) => {
-    const contentOffset = event.nativeEvent.contentOffset.y;
-    const contentSize = event.nativeEvent.contentSize.height;
-    const layoutMeasurement = event.nativeEvent.layoutMeasurement.height;
-
-    if (contentOffset + layoutMeasurement >= contentSize) {
-      setIsAtEndOfScroll(true);
-    } else {
-      setIsAtEndOfScroll(false);
-    }
-  };
-
   const debouncedGetItems = useCallback(
-    _.debounce((pageNumber, query) => getItems(pageNumber, query), 1000),
+    _.debounce((pageNumber, query) => getItems(query, pageNumber), 500),
     []
   );
 
-  useEffect(() => {
-    if (isAtEndOfScroll && hasMoreItems && !isLoading) {
-      debouncedGetItems(page, searchQuery);
-      setPage((prevPage) => prevPage + 1);
-    }
-  }, [isAtEndOfScroll, hasMoreItems, isLoading, searchQuery, debouncedGetItems, page]);
 
   useEffect(() => {
-    console.log(searchQuery);
-    getItems(searchQuery)
+    setPage(1)
+    setItems([])
+    //getItems(searchQuery)
+    debouncedGetItems(page, searchQuery)
   },[searchQuery])
 
   const handleChangeText = (e) => {
     setSearchQuery(e)
   }
-  const loadMoreItems = () => {
-      if (hasMoreItems && !isLoading) {
-        debouncedGetItems(page, searchQuery);
-        setPage((prevPage) => prevPage + 1);
-      }
-  }
-  const renderItem = ({ item }) => (
-    <ItemComponent item={item} onPress={() => router.push(`/detail/${item.id}`)} />
-  );
+
   return (
     <View style={{
       paddingVertical: 8,
@@ -101,10 +63,8 @@ const Explore = () => {
       </View>
   
 
-      <ScrollView style={{marginVertical: 15}} 
-        
-      onScroll={handleScroll} 
-      scrollEventThrottle={16}>
+      <ScrollView style={{marginVertical: 15}} >
+        {isLoading &&  Array.from({length: 4}).map((_, index) => (<MyLoader2 key={index} width={400} height={150}/>))}
         { items.map((item, index) => (
           <TouchableOpacity key={index} onPress={() => router.push(`/detail/${item.id}`)}>
             <View style={styles.item}>
@@ -115,15 +75,11 @@ const Explore = () => {
                   <Text style={{ fontSize: 12, fontWeight: '300' }} numberOfLines={2} ellipsizeMode="tail">ISBN: { item.isbn }</Text>
                 </View>
             </View>
-            {isLoading && <ActivityIndicator animating={true} size={'small'} />}
           </TouchableOpacity>
         )) }
+        {(hasMoreItems && !isLoading) && <Button theme={{colors: { primary: 'rgba(0,0,0,0.5)', outline: 'rgba(0,0,0,0.2)'}}} mode='outlined'  onPress={() => getItems(searchQuery,page)}>LoadMore ...</Button>}
       </ScrollView>
 
-      
-        
-      
-      
     </View>
   )
 }
@@ -135,14 +91,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     marginVertical: 8,
-    marginHorizontal: 16,
+    marginHorizontal: 8,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    borderRadius: 5,
+    elevation: 1,
   },
   image: {
     width: 80,

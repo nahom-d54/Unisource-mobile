@@ -1,5 +1,5 @@
 import nocover from "../assets/images/nocover.jpg";
-import logo from "../assets/images/Unisource_logo.png";
+import logo from "../assets/images/unisource.png";
 
 export default {
   nocover,
