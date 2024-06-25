@@ -112,3 +112,14 @@ View Files: Open downloaded files directly from the app.
 Save Files: Save downloaded files to the device storage.
 Delete Files: Delete individual files or clear the entire download history.
 
+
+## Authors
+
+- [@Nahom](https://www.github.com/nahom-d54)
+- [@Daniel](https://www.github.com/danielbizualem)
+- [@Hana](https://www.github.com/annah11)
+- [@Misgana](https://www.github.com/misge1st)
+- [@Eliyas](https://www.github.com/eliyas47)
+- [@Naol](https://www.github.com/naol86)
+
+
